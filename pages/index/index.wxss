@@ -1,0 +1,131 @@
+.page {
+  padding: 18rpx 20rpx 44rpx;
+  background: #f2f4f8;
+}
+
+.nav {
+  height: 84rpx;
+  border-radius: 20rpx;
+  background: #161d2b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18rpx;
+  margin-bottom: 14rpx;
+}
+.nav__title { font-size: 30rpx; font-weight: 600; }
+.nav__right { display: flex; gap: 10rpx; }
+.dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #8ea1c8;
+}
+
+.card {
+  background: #fff;
+  border: 1rpx solid #e2e7f0;
+  border-radius: 18rpx;
+  padding: 18rpx;
+  margin-bottom: 12rpx;
+}
+.section-title {
+  font-size: 26rpx;
+  color: #243047;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+.log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.seg {
+  background: #eef2f8;
+  border-radius: 999rpx;
+  padding: 6rpx;
+  display: flex;
+  margin-bottom: 10rpx;
+}
+.seg__item {
+  flex: 1;
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 999rpx;
+  color: #62718f;
+  font-size: 22rpx;
+}
+.seg__item.active {
+  background: #1f2736;
+  color: #fff;
+}
+
+.control { margin-bottom: 10rpx; }
+.control__label { color: #3b4865; font-size: 22rpx; margin-bottom: 6rpx; }
+.input-seg { margin-bottom: 12rpx; }
+
+.buttons {
+  margin-top: 6rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+.buttons--equal {
+  margin-top: 10rpx;
+  flex-wrap: nowrap;
+}
+.btn {
+  flex: 1;
+  min-width: 180rpx;
+  border-radius: 10rpx;
+  background: #e8edf5;
+  color: #28344e;
+  font-size: 22rpx;
+}
+.btn--equal {
+  min-width: 0;
+  height: 76rpx;
+  line-height: 76rpx;
+}
+.btn::after { border: none; }
+.btn.primary { background: #1f2736; color: #fff; }
+.btn.ghost { width: 100%; background: #fff; border: 1rpx solid #c8d0e0; color: #54617d; }
+.btn-small {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 132rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  font-size: 20rpx;
+  padding: 0;
+}
+
+.chart {
+  width: 100%;
+  height: 220rpx;
+  background: #f8fafe;
+  border: 1rpx solid #e2e7f0;
+  border-radius: 12rpx;
+  display: block;
+}
+.tip {
+  margin-top: 8rpx;
+  color: #75829d;
+  font-size: 21rpx;
+}
+.kv {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #33415d;
+}
+.log-line {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: #4f5e7b;
+}
+.time {
+  color: #8b97af;
+  margin-right: 8rpx;
+}

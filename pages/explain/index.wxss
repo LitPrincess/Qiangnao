@@ -1,0 +1,5 @@
+.page { padding: 24rpx 28rpx 40rpx; }
+.card { background: #1a1d28; border: 1rpx solid rgba(255,255,255,.06); border-radius: 16rpx; padding: 20rpx; margin-bottom: 16rpx; }
+.h { color: #b8bdd0; font-size: 28rpx; margin-bottom: 10rpx; font-weight: 600; }
+.p { color: #d4d8e6; font-size: 24rpx; line-height: 1.65; margin-top: 8rpx; }
+.link { color: #7db2ff; font-size: 22rpx; margin-top: 8rpx; }

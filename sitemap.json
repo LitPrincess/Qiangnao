@@ -1,0 +1,9 @@
+{
+  "desc": "MasticTempo demo",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

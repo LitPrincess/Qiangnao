@@ -1,0 +1,32 @@
+<view class="page safe-bottom">
+  <view class="card">
+    <view class="h">1) 时序性如何体现</view>
+    <view class="p">我们不是看单一时刻，而是看“最近窗口”的趋势：</view>
+    <view class="p">- 取食间隔序列 g(t)：比较 recent(最近3口) 与 older(更早3口) 的均值，计算 speedup=(older-recent)/older。</view>
+    <view class="p">- 风险 R(t)=clip(speedup*0.85/情境系数,0,1)。</view>
+    <view class="p">- 同时进行一步预测 R(t+1)=clip(R(t)+0.8*(R(t)-R(t-1)),0,1)。</view>
+  </view>
+
+  <view class="card">
+    <view class="h">2) 判定与控制逻辑</view>
+    <view class="p">- 抢食判定：当前口咀嚼数 c(t) &lt; 目标阈值 c*(场景自适应) 且发生下一口取食。</view>
+    <view class="p">- 干预分级：缺口越大，触觉阻力越强；若未抢食但 R(t) 高，则先触发软干预。</view>
+    <view class="p">- 输出：骨传导BPM(44/48/52) + 线振频率(3.2/2.0/1.2Hz)。</view>
+  </view>
+
+  <view class="card">
+    <view class="h">3) 医学解释性（答辩可直接引用）</view>
+    <view class="p">- 慢速进食与较低即时能量摄入相关：Robinson et al., AJCN 2014, Meta-analysis (22 studies)。</view>
+    <view class="p">- 增加咀嚼次数可降低饥饿并影响肠促胰素/饱腹激素：Zhu et al., Am J Clin Nutr 2011。</view>
+    <view class="p">- 慢速节律可提升饱腹感评分：Angelopoulos et al., BMJ Open Diabetes Res Care 2014。</view>
+    <view class="p">- 可穿戴IMU进行进食时序检测具可行性：Wang et al., IEEE JBHI 2024 (TCN-MHA)。</view>
+  </view>
+
+  <view class="card">
+    <view class="h">4) 参考文献链接</view>
+    <view class="link">AJCN 2014: https://pubmed.ncbi.nlm.nih.gov/24847856/</view>
+    <view class="link">AJCN 2011: https://pubmed.ncbi.nlm.nih.gov/21775556/</view>
+    <view class="link">BMJ 2014: https://drc.bmj.com/content/2/1/e000013</view>
+    <view class="link">IEEE JBHI 2024: https://arxiv.org/abs/2401.05376</view>
+  </view>
+</view>

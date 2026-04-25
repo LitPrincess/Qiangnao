@@ -1,0 +1,102 @@
+<view class="page safe-bottom">
+  <view class="nav">
+    <view class="nav__title">MasticTempo 联合时序演示</view>
+    <view class="nav__right">
+      <view class="dot"></view>
+      <view class="dot"></view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">演示模式</view>
+    <view class="seg">
+      <view class="seg__item {{demoMode === 'manual' ? 'active' : ''}}" bindtap="switchToManual">手动模拟</view>
+      <view class="seg__item {{demoMode === 'auto' ? 'active' : ''}}" bindtap="switchToAuto">自动演示</view>
+    </view>
+    <view class="tip">手动模式：你点按钮触发事件；自动模式：按频率连续生成事件。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">可控输入</view>
+    <view wx:if="{{demoMode === 'manual'}}">
+      <view class="seg input-seg">
+        <view class="seg__item {{inputMode === 'frequency' ? 'active' : ''}}" bindtap="switchInputFrequency">频率调节</view>
+        <view class="seg__item {{inputMode === 'tap' ? 'active' : ''}}" bindtap="switchInputTap">手动点击</view>
+      </view>
+      <view wx:if="{{inputMode === 'frequency'}}">
+        <view class="control">
+          <view class="control__label">咀嚼频率 pMut (Hz): {{chewSetHz}}</view>
+          <slider min="0.5" max="3.0" step="0.1" value="{{chewSetHz}}" show-value bindchange="onChewSetChange" />
+        </view>
+        <view class="control">
+          <view class="control__label">抬手频率 板戒 (Hz): {{handSetHz}}</view>
+          <slider min="0.05" max="1.0" step="0.05" value="{{handSetHz}}" show-value bindchange="onHandSetChange" />
+        </view>
+        <view class="buttons">
+          <button class="btn primary" bindtap="toggleRun">{{isRunning ? '停止演示' : '开始演示'}}</button>
+          <button class="btn" bindtap="resetSession">重置</button>
+        </view>
+      </view>
+      <view wx:else>
+        <view class="buttons">
+          <button class="btn primary" bindtap="toggleRun">{{isRunning ? '停止演示' : '开始演示'}}</button>
+          <button class="btn" bindtap="resetSession">重置</button>
+        </view>
+        <view class="buttons buttons--equal">
+          <button class="btn btn--equal" bindtap="manualChew">咀嚼 +1</button>
+          <button class="btn btn--equal" bindtap="manualHand">抬手 +1</button>
+        </view>
+      </view>
+    </view>
+    <view wx:else>
+      <view class="tip">自动演示使用固定脚本参数，输入已锁定。</view>
+      <view class="kv">咀嚼频率 pMut: {{chewSetHz}} Hz</view>
+      <view class="kv">抬手频率 板戒: {{handSetHz}} Hz</view>
+      <view class="buttons">
+        <button class="btn primary" bindtap="toggleRun">{{isRunning ? '停止演示' : '开始演示'}}</button>
+        <button class="btn" bindtap="resetSession">重置</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">实时可视化 1：咀嚼频率</view>
+    <canvas id="chewCanvas" type="2d" class="chart"></canvas>
+    <view class="tip">青线=实时观测，灰线=设定频率</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">实时可视化 2：抬手频率</view>
+    <canvas id="handCanvas" type="2d" class="chart"></canvas>
+    <view class="tip">蓝线=实时观测，灰线=设定频率</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">实时可视化 3：联合风险与时序预测</view>
+    <canvas id="riskCanvas" type="2d" class="chart"></canvas>
+    <view class="tip">红线=当前风险，橙线=下一步预测</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">联合算法判定</view>
+    <view class="kv">观测咀嚼频率：{{chewObsHz}} Hz</view>
+    <view class="kv">观测抬手频率：{{handObsHz}} Hz</view>
+    <view class="kv">近窗咀嚼/每次抬手：{{chewPerHand}}</view>
+    <view class="kv">抢食风险：{{rushRiskPct}}% · 总风险：{{riskPct}}% · 预测：{{predPct}}%</view>
+    <view class="kv">干预等级：{{interventionLabel}}</view>
+  </view>
+
+  <view class="card">
+    <view class="log-head">
+      <view class="section-title">事件日志</view>
+      <button class="btn btn-small" bindtap="clearLogs">清空日志</button>
+    </view>
+    <view wx:if="{{!logs.length}}" class="tip">暂无事件</view>
+    <view wx:for="{{logs}}" wx:key="id" class="log-line">
+      <text class="time">{{item.t}}</text>
+      <text>{{item.msg}}</text>
+    </view>
+  </view>
+
+  <button class="btn ghost" bindtap="goExplain">查看算法说明与医学依据</button>
+</view>
