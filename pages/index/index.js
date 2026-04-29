@@ -1,4 +1,7 @@
+const { chatCompletions } = require('../../utils/llm.js')
+
 const MAX_POINTS = 24
+const FUTURE_POINTS = 24
 // Stable demo mode: slower scheduler to avoid AppService timeout.
 const TICK_MS = 500
 const DRAW_MS = 500
@@ -14,6 +17,29 @@ function nowText() {
   const d = new Date()
   const p = (n) => (n < 10 ? `0${n}` : `${n}`)
   return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+}
+
+function cleanAiText(raw) {
+  if (!raw) return ''
+  return String(raw)
+    .replace(/\r\n/g, '\n')
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/\*\*/g, '')
+    .replace(/^\s*[-*]\s+/gm, '')
+    .replace(/^\s*\d+[.)]\s+/gm, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+function mergeProfilePatch(patch) {
+  let curr = {}
+  try {
+    curr = wx.getStorageSync('mt_profile') || {}
+  } catch (e) {}
+  const next = { ...curr, ...patch }
+  try {
+    wx.setStorageSync('mt_profile', next)
+  } catch (e) {}
 }
 
 Page({
@@ -32,6 +58,9 @@ Page({
     interventionLabel: 'None',
     logs: [],
     stableMode: true,
+    aiLoading: false,
+    aiText: '',
+    aiError: '',
   },
 
   loop: 0,
@@ -45,14 +74,70 @@ Page({
   chewEvents: [],
   handEvents: [],
   chewObsSeries: [],
-  chewSetSeries: [],
+  chewPredSeries: [],
   handObsSeries: [],
-  handSetSeries: [],
+  handPredSeries: [],
   riskSeries: [],
-  predSeries: [],
+  riskPredSeries: [],
 
   onReady() {
     this.initCanvases()
+  },
+
+  buildMasticContextForLlm() {
+    this.ensureState()
+    const m = this.computeMetrics()
+    const tail = (arr, n) => (Array.isArray(arr) ? arr.slice(-n) : [])
+    return {
+      demoMode: this.data.demoMode,
+      inputMode: this.data.inputMode,
+      setChewHz: this.data.chewSetHz,
+      setHandHz: this.data.handSetHz,
+      obsChewHz: Number(m.chewObsHz.toFixed(2)),
+      obsHandHz: Number(m.handObsHz.toFixed(2)),
+      chewPerHand: Number(m.chewPerHand.toFixed(2)),
+      rushRiskPct: Math.round(m.rushRisk * 100),
+      riskPct: Math.round(m.risk * 100),
+      predPct: Math.round(m.pred * 100),
+      intervention: m.interventionLabel,
+      seriesTail: {
+        chewObs: tail(this.chewObsSeries, 8).map((v) => Number(v.toFixed(2))),
+        handObs: tail(this.handObsSeries, 8).map((v) => Number(v.toFixed(2))),
+        risk: tail(this.riskSeries, 8).map((v) => Number(v.toFixed(2))),
+      },
+    }
+  },
+
+  runAiMasticAnalysis() {
+    const ctx = this.buildMasticContextForLlm()
+    const system =
+      '你是「咀嚼时序与进食节奏」的科普助手。根据用户给出的演示/观测数据（非临床监测），用简洁中文输出。\n' +
+      '输出必须是纯文本，不要使用 Markdown，不要出现 #、*、-、数字列表。\n' +
+      '固定分成三段并用这三个小标题开头：概括、风险含义、建议。\n' +
+      '建议段给 2 到 4 条短建议，每条一句话。整体 220 到 320 字，语气友好，不做医疗诊断。'
+    const user = `以下为 MasticTempo 演示的 JSON 数据（10s 滑窗、演示算法）：\n${JSON.stringify(ctx)}`
+    this.setData({ aiLoading: true, aiError: '', aiText: '' })
+    chatCompletions({
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: user },
+      ],
+    })
+      .then((text) => {
+        this.setData({ aiText: cleanAiText(text), aiLoading: false })
+        this.pushLog('AI 咀嚼分析已更新')
+        mergeProfilePatch({
+          totalAnalyses: Number((wx.getStorageSync('mt_profile') || {}).totalAnalyses || 0) + 1,
+          lastRiskPct: Number(this.data.riskPct || 0),
+        })
+      })
+      .catch((err) => {
+        this.setData({
+          aiError: (err && err.message) || '请求失败',
+          aiLoading: false,
+        })
+        wx.showToast({ title: 'AI 分析失败', icon: 'none' })
+      })
   },
 
   onUnload() {
@@ -78,11 +163,11 @@ Page({
     if (!Array.isArray(this.chewEvents)) this.chewEvents = []
     if (!Array.isArray(this.handEvents)) this.handEvents = []
     if (!Array.isArray(this.chewObsSeries)) this.chewObsSeries = []
-    if (!Array.isArray(this.chewSetSeries)) this.chewSetSeries = []
+    if (!Array.isArray(this.chewPredSeries)) this.chewPredSeries = []
     if (!Array.isArray(this.handObsSeries)) this.handObsSeries = []
-    if (!Array.isArray(this.handSetSeries)) this.handSetSeries = []
+    if (!Array.isArray(this.handPredSeries)) this.handPredSeries = []
     if (!Array.isArray(this.riskSeries)) this.riskSeries = []
-    if (!Array.isArray(this.predSeries)) this.predSeries = []
+    if (!Array.isArray(this.riskPredSeries)) this.riskPredSeries = []
     if (!this.simState || typeof this.simState !== 'object') {
       this.simState = { chewCarry: 0, handCarry: 0 }
     }
@@ -152,6 +237,11 @@ Page({
       this.loop = 0
       this.setData({ isRunning: false })
       this.pushLog('演示已停止')
+      const p = wx.getStorageSync('mt_profile') || {}
+      mergeProfilePatch({
+        sessions: Number(p.sessions || 0) + 1,
+        lastRiskPct: Number(this.data.riskPct || 0),
+      })
       return
     }
     if (this.loop) clearInterval(this.loop)
@@ -170,11 +260,11 @@ Page({
     this.chewEvents = []
     this.handEvents = []
     this.chewObsSeries = []
-    this.chewSetSeries = []
+    this.chewPredSeries = []
     this.handObsSeries = []
-    this.handSetSeries = []
+    this.handPredSeries = []
     this.riskSeries = []
-    this.predSeries = []
+    this.riskPredSeries = []
     this.setData({
       isRunning: false,
       chewObsHz: '0.00',
@@ -261,11 +351,11 @@ Page({
     this.ensureState()
     const m = this.computeMetrics()
     this.addPoint(this.chewObsSeries, m.chewObsHz)
-    this.addPoint(this.chewSetSeries, this.data.chewSetHz)
     this.addPoint(this.handObsSeries, m.handObsHz)
-    this.addPoint(this.handSetSeries, this.data.handSetHz)
     this.addPoint(this.riskSeries, m.risk)
-    this.addPoint(this.predSeries, m.pred)
+    this.chewPredSeries = this.buildForecastSeries(this.chewObsSeries, this.data.chewSetHz, 3.0)
+    this.handPredSeries = this.buildForecastSeries(this.handObsSeries, this.data.handSetHz, 1.0)
+    this.riskPredSeries = this.buildForecastSeries(this.riskSeries, m.pred, 1.0)
     const now = Date.now()
     // Throttle UI data commit frequency in stable mode.
     if (!this.lastUiUpdateAt || now - this.lastUiUpdateAt >= DRAW_MS) {
@@ -356,27 +446,61 @@ Page({
     ctx.font = '9px sans-serif'
     ctx.fillText(axis.y, 4, 12)
     ctx.fillText(axis.x, w - 28, h - 5)
-    const draw = (arr, c) => {
+    const draw = (arr, c, offset, totalSlots) => {
       if (!arr.length) return
       ctx.strokeStyle = c
       ctx.lineWidth = 2
       ctx.beginPath()
       arr.forEach((v, i) => {
-        const x = left + (i * plotW) / (MAX_POINTS - 1)
+        const idx = offset + i
+        const x = left + (idx * plotW) / Math.max(1, totalSlots - 1)
         const y = h - bottom - (clip(v, 0, maxY) / maxY) * plotH
         if (i === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
       })
       ctx.stroke()
     }
-    draw(seriesA, colorA)
-    if (seriesB) draw(seriesB, colorB)
+    const liveLen = Math.min(seriesA.length, MAX_POINTS)
+    const live = liveLen > 0 ? seriesA.slice(-liveLen) : []
+    const future = Array.isArray(seriesB) ? seriesB.slice(0, FUTURE_POINTS) : []
+    const totalSlots = live.length + future.length
+    draw(live, colorA, 0, totalSlots || 1)
+    if (future.length) draw(future, colorB, live.length, totalSlots || 1)
+
+    // Split marker between realtime and prediction zones.
+    if (totalSlots > 1 && live.length > 0 && future.length > 0) {
+      const splitX = left + ((live.length - 1) * plotW) / Math.max(1, totalSlots - 1)
+      ctx.strokeStyle = '#d6dce8'
+      ctx.setLineDash([4, 3])
+      ctx.beginPath()
+      ctx.moveTo(splitX, top)
+      ctx.lineTo(splitX, h - bottom)
+      ctx.stroke()
+      ctx.setLineDash([])
+    }
   },
 
   renderAll() {
-    this.drawLine(this.charts.chew, this.chewObsSeries, '#35b9a6', 3.0, this.chewSetSeries, '#9eaac2', { x: 't', y: 'Hz' })
-    this.drawLine(this.charts.hand, this.handObsSeries, '#4f88ff', 1.0, this.handSetSeries, '#9eaac2', { x: 't', y: 'Hz' })
-    this.drawLine(this.charts.risk, this.riskSeries, '#de5e53', 1.0, this.predSeries, '#d9a441', { x: 't', y: 'risk' })
+    this.drawLine(this.charts.chew, this.chewObsSeries, '#35b9a6', 3.0, this.chewPredSeries, '#9eaac2', { x: 't', y: 'Hz' })
+    this.drawLine(this.charts.hand, this.handObsSeries, '#4f88ff', 1.0, this.handPredSeries, '#9eaac2', { x: 't', y: 'Hz' })
+    this.drawLine(this.charts.risk, this.riskSeries, '#de5e53', 1.0, this.riskPredSeries, '#9eaac2', { x: 't', y: 'risk' })
+  },
+
+  buildForecastSeries(history, anchor, maxY) {
+    const h = Array.isArray(history) ? history.slice(-MAX_POINTS) : []
+    const last = h.length ? h[h.length - 1] : clip(anchor || 0, 0, maxY)
+    const prev = h.length > 3 ? h[h.length - 4] : last
+    const slope = (last - prev) / 3
+    const trend = clip(slope, -0.25 * maxY, 0.25 * maxY)
+    const out = []
+    let cur = last
+    const target = clip(anchor != null ? anchor : last, 0, maxY)
+    for (let i = 0; i < FUTURE_POINTS; i += 1) {
+      const toward = (target - cur) * 0.12
+      cur = clip(cur + trend * 0.35 + toward, 0, maxY)
+      out.push(cur)
+    }
+    return out
   },
 
   scheduleRender() {
@@ -389,5 +513,13 @@ Page({
 
   goExplain() {
     wx.navigateTo({ url: '/pages/explain/index' })
+  },
+
+  goHome() {
+    wx.navigateTo({ url: '/pages/home/index' })
+  },
+
+  goProfile() {
+    wx.navigateTo({ url: '/pages/profile/index' })
   },
 })

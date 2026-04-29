@@ -1,32 +1,96 @@
 <view class="page safe-bottom">
   <view class="card">
-    <view class="h">1) 时序性如何体现</view>
-    <view class="p">我们不是看单一时刻，而是看“最近窗口”的趋势：</view>
-    <view class="p">- 取食间隔序列 g(t)：比较 recent(最近3口) 与 older(更早3口) 的均值，计算 speedup=(older-recent)/older。</view>
-    <view class="p">- 风险 R(t)=clip(speedup*0.85/情境系数,0,1)。</view>
-    <view class="p">- 同时进行一步预测 R(t+1)=clip(R(t)+0.8*(R(t)-R(t-1)),0,1)。</view>
+    <view class="h">1) 当前演示的时序逻辑</view>
+    <view class="p">可视化统一为两段时间轴：左半轴是实时状态（彩色线），右半轴是未来预测（灰线）。</view>
+    <view class="p">系统每个 tick 都用最新观测值更新实时序列，再用趋势 + 回归目标的方法重算整段未来预测，因此预测线会持续变化，不是静态模板。</view>
+    <view class="formula-note">公式排版（论文式）：</view>
+    <view class="formula"><text class="math">N = 24，M = 24</text></view>
+    <view class="formula">
+      <text class="math">trend = clip(</text>
+      <view class="frac">
+        <text class="frac__num">x<text class="sub">t</text> - x<text class="sub">t-3</text></text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">3</text>
+      </view>
+      <text class="math">, -0.25y<text class="sub">max</text>, 0.25y<text class="sub">max</text>)</text>
+    </view>
+    <view class="formula"><text class="math">x^<text class="sup">k+1</text> = clip(x^<text class="sup">k</text> + 0.35trend + 0.12(target - x^<text class="sup">k</text>), 0, y<text class="sub">max</text>)</text></view>
+    <view class="p">其中 x^_0 = x_t，k = 0...M-1。target 在频率图中取设定频率，在风险图中取当前一步预测值。</view>
   </view>
 
   <view class="card">
-    <view class="h">2) 判定与控制逻辑</view>
-    <view class="p">- 抢食判定：当前口咀嚼数 c(t) &lt; 目标阈值 c*(场景自适应) 且发生下一口取食。</view>
-    <view class="p">- 干预分级：缺口越大，触觉阻力越强；若未抢食但 R(t) 高，则先触发软干预。</view>
-    <view class="p">- 输出：骨传导BPM(44/48/52) + 线振频率(3.2/2.0/1.2Hz)。</view>
+    <view class="h">2) 判断逻辑与数学计算</view>
+    <view class="p">在 10 秒滑窗内统计咀嚼事件与抬手事件：</view>
+    <view class="formula">
+      <text class="math">f<text class="sub">chew</text> = </text>
+      <view class="frac">
+        <text class="frac__num">chewCount</text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">10</text>
+      </view>
+      <text class="math">，f<text class="sub">hand</text> = </text>
+      <view class="frac">
+        <text class="frac__num">handCount</text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">10</text>
+      </view>
+    </view>
+    <view class="formula">
+      <text class="math">cph = </text>
+      <view class="frac">
+        <text class="frac__num">chewCount</text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">handCount</text>
+      </view>
+      <text class="math">，若 handCount = 0 则 cph = 0</text>
+    </view>
+    <view class="formula">
+      <text class="math">rushRisk = clip(</text>
+      <view class="frac">
+        <text class="frac__num">12 - cph</text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">12</text>
+      </view>
+      <text class="math">, 0, 1)</text>
+    </view>
+    <view class="formula">
+      <text class="math">overHandRisk = clip(</text>
+      <view class="frac">
+        <text class="frac__num">f<text class="sub">hand</text> - f<text class="sub">hand,set</text></text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">f<text class="sub">hand,set</text> + 0.05</text>
+      </view>
+      <text class="math">, 0, 1)</text>
+    </view>
+    <view class="formula">
+      <text class="math">underChewRisk = clip(</text>
+      <view class="frac">
+        <text class="frac__num">f<text class="sub">chew,set</text> - f<text class="sub">chew</text></text>
+        <text class="frac__bar"></text>
+        <text class="frac__den">f<text class="sub">chew,set</text> + 0.05</text>
+      </view>
+      <text class="math">, 0, 1)</text>
+    </view>
+    <view class="formula"><text class="math">risk = clip(0.55rushRisk + 0.30overHandRisk + 0.15underChewRisk, 0, 1)</text></view>
+    <view class="formula"><text class="math">pred = clip(risk + 0.7(risk - risk<text class="sub">prev</text>), 0, 1)</text></view>
+    <view class="p">干预等级规则：</view>
+    <view class="p">Strong：risk &gt; 0.75 或 rushRisk &gt; 0.60</view>
+    <view class="p">Moderate：risk &gt; 0.45 或 rushRisk &gt; 0.35</view>
+    <view class="p">Soft：risk &gt; 0.20，其他情况为 None</view>
   </view>
 
   <view class="card">
-    <view class="h">3) 医学解释性（答辩可直接引用）</view>
-    <view class="p">- 慢速进食与较低即时能量摄入相关：Robinson et al., AJCN 2014, Meta-analysis (22 studies)。</view>
-    <view class="p">- 增加咀嚼次数可降低饥饿并影响肠促胰素/饱腹激素：Zhu et al., Am J Clin Nutr 2011。</view>
-    <view class="p">- 慢速节律可提升饱腹感评分：Angelopoulos et al., BMJ Open Diabetes Res Care 2014。</view>
-    <view class="p">- 可穿戴IMU进行进食时序检测具可行性：Wang et al., IEEE JBHI 2024 (TCN-MHA)。</view>
+    <view class="h">3) 医学解释（答辩可用）</view>
+    <view class="p">慢速进食与较低即时能量摄入相关。该演示把“抬手过快 + 每次抬手前咀嚼不足”作为高风险信号，符合行为营养学中“进食速率影响摄入量”的方向性结论。</view>
+    <view class="p">增加咀嚼次数通常与饱腹感提升、进食节律放缓相关。演示中的 cph（每次抬手对应咀嚼数）用于表征这一趋势。</view>
+    <view class="p">风险值是行为节律指标，不是临床诊断。页面给出的建议用于自我节奏训练，不替代医疗意见。</view>
   </view>
 
   <view class="card">
-    <view class="h">4) 参考文献链接</view>
-    <view class="link">AJCN 2014: https://pubmed.ncbi.nlm.nih.gov/24847856/</view>
-    <view class="link">AJCN 2011: https://pubmed.ncbi.nlm.nih.gov/21775556/</view>
-    <view class="link">BMJ 2014: https://drc.bmj.com/content/2/1/e000013</view>
-    <view class="link">IEEE JBHI 2024: https://arxiv.org/abs/2401.05376</view>
+    <view class="h">4) 参考文献</view>
+    <view class="link">Robinson et al., AJCN 2014: https://pubmed.ncbi.nlm.nih.gov/24847856/</view>
+    <view class="link">Zhu et al., AJCN 2011: https://pubmed.ncbi.nlm.nih.gov/21775556/</view>
+    <view class="link">Angelopoulos et al., BMJ 2014: https://drc.bmj.com/content/2/1/e000013</view>
+    <view class="link">Wang et al., IEEE JBHI 2024: https://arxiv.org/abs/2401.05376</view>
   </view>
 </view>

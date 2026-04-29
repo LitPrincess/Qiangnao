@@ -1,0 +1,27 @@
+<view class="page safe-bottom">
+  <view class="hero card">
+    <view class="title">MasticTempo</view>
+    <view class="subtitle">无感化咀嚼管家 · 联合时序演示</view>
+    <view class="desc">通过“咀嚼频率 + 抬手频率 + 风险预测”，帮助用户感知进食节奏并给出温和提醒。</view>
+    <view class="buttons">
+      <button class="btn primary" bindtap="goDemo">进入实时演示</button>
+      <button class="btn" bindtap="goExplain">查看算法与医学解释</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">快速状态</view>
+    <view class="kv">累计演示次数：{{profile.sessions}}</view>
+    <view class="kv">累计 AI 分析：{{profile.totalAnalyses}}</view>
+    <view class="kv">最近风险：{{profile.lastRiskPct}}%</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">建议功能</view>
+    <view class="tip">1) 演示前先在“手动模拟”调到你的自然节奏。</view>
+    <view class="tip">2) 观察灰色未来曲线是否持续上扬，提前干预。</view>
+    <view class="tip">3) 在个人中心设置目标频率，便于长期自我训练。</view>
+  </view>
+
+  <button class="btn ghost" bindtap="goProfile">进入个人中心</button>
+</view>

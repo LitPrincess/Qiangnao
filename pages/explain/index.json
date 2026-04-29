@@ -1,4 +1,7 @@
 {
-  "navigationBarTitleText": "算法与医学解释",
+  "navigationBarTitleText": "",
+  "navigationBarBackgroundColor": "#f2f4f8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f2f4f8",
   "usingComponents": {}
 }

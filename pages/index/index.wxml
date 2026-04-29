@@ -62,19 +62,19 @@
   <view class="card">
     <view class="section-title">实时可视化 1：咀嚼频率</view>
     <canvas id="chewCanvas" type="2d" class="chart"></canvas>
-    <view class="tip">青线=实时观测，灰线=设定频率</view>
+    <view class="tip">青线=实时状态（左半轴），灰线=未来预测（右半轴，实时重算）</view>
   </view>
 
   <view class="card">
     <view class="section-title">实时可视化 2：抬手频率</view>
     <canvas id="handCanvas" type="2d" class="chart"></canvas>
-    <view class="tip">蓝线=实时观测，灰线=设定频率</view>
+    <view class="tip">蓝线=实时状态（左半轴），灰线=未来预测（右半轴，实时重算）</view>
   </view>
 
   <view class="card">
     <view class="section-title">实时可视化 3：联合风险与时序预测</view>
     <canvas id="riskCanvas" type="2d" class="chart"></canvas>
-    <view class="tip">红线=当前风险，橙线=下一步预测</view>
+    <view class="tip">红线=实时风险（左半轴），灰线=未来风险预测（右半轴，实时重算）</view>
   </view>
 
   <view class="card">
@@ -84,6 +84,16 @@
     <view class="kv">近窗咀嚼/每次抬手：{{chewPerHand}}</view>
     <view class="kv">抢食风险：{{rushRiskPct}}% · 总风险：{{riskPct}}% · 预测：{{predPct}}%</view>
     <view class="kv">干预等级：{{interventionLabel}}</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">AI 咀嚼模式说明</view>
+    <view class="tip">根据当前页统计与曲线尾段，生成模式说明与提醒（演示用途，非医疗诊断）。</view>
+    <view class="buttons">
+      <button class="btn primary" loading="{{aiLoading}}" bindtap="runAiMasticAnalysis">分析当前模式</button>
+    </view>
+    <view wx:if="{{aiError}}" class="ai-err">错误：{{aiError}}</view>
+    <view wx:elif="{{aiText}}" class="ai-text">{{aiText}}</view>
   </view>
 
   <view class="card">
@@ -98,5 +108,9 @@
     </view>
   </view>
 
+  <view class="buttons">
+    <button class="btn" bindtap="goHome">返回首页</button>
+    <button class="btn" bindtap="goProfile">个人中心</button>
+  </view>
   <button class="btn ghost" bindtap="goExplain">查看算法说明与医学依据</button>
 </view>

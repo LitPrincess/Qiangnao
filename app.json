@@ -1,13 +1,15 @@
 {
   "pages": [
+    "pages/home/index",
     "pages/index/index",
+    "pages/profile/index",
     "pages/explain/index"
   ],
   "window": {
     "navigationBarTitleText": "MasticTempo",
-    "navigationBarBackgroundColor": "#1a1c24",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#12141a"
+    "navigationBarBackgroundColor": "#f2f4f8",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f2f4f8"
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json"

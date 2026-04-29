@@ -1,0 +1,31 @@
+<view class="page safe-bottom">
+  <view class="card">
+    <view class="section-title">个人信息与偏好</view>
+    <view class="label">昵称</view>
+    <input class="ipt" value="{{nickname}}" placeholder="输入昵称" bindinput="onNickInput" />
+
+    <view class="label">目标咀嚼频率 (Hz): {{targetChewHz}}</view>
+    <slider min="0.5" max="3.0" step="0.1" value="{{targetChewHz}}" show-value bindchange="onTargetChange" />
+
+    <view class="label">提醒强度偏好</view>
+    <view class="seg">
+      <view class="seg__item {{remindLevel === 'soft' ? 'active' : ''}}" bindtap="setRemindSoft">柔和</view>
+      <view class="seg__item {{remindLevel === 'moderate' ? 'active' : ''}}" bindtap="setRemindModerate">中等</view>
+      <view class="seg__item {{remindLevel === 'strong' ? 'active' : ''}}" bindtap="setRemindStrong">较强</view>
+    </view>
+
+    <view class="buttons">
+      <button class="btn primary" bindtap="saveSettings">保存设置</button>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">使用统计</view>
+    <view class="kv">累计演示次数：{{sessions}}</view>
+    <view class="kv">累计 AI 分析：{{totalAnalyses}}</view>
+    <view class="kv">最近风险：{{lastRiskPct}}%</view>
+    <view class="buttons">
+      <button class="btn" bindtap="clearStats">清空统计</button>
+    </view>
+  </view>
+</view>

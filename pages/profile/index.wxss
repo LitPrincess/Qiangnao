@@ -1,0 +1,81 @@
+.page {
+  padding: 18rpx 20rpx 44rpx;
+  background: #f2f4f8;
+}
+
+.card {
+  background: #fff;
+  border: 1rpx solid #e2e7f0;
+  border-radius: 18rpx;
+  padding: 18rpx;
+  margin-bottom: 12rpx;
+}
+
+.section-title {
+  font-size: 26rpx;
+  color: #243047;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+
+.label {
+  color: #3b4865;
+  font-size: 22rpx;
+  margin-top: 8rpx;
+  margin-bottom: 6rpx;
+}
+
+.ipt {
+  border: 1rpx solid #d7dfed;
+  background: #f8fafe;
+  border-radius: 10rpx;
+  padding: 12rpx 16rpx;
+  color: #2a3650;
+  font-size: 23rpx;
+}
+
+.seg {
+  background: #eef2f8;
+  border-radius: 999rpx;
+  padding: 6rpx;
+  display: flex;
+  margin-bottom: 10rpx;
+}
+
+.seg__item {
+  flex: 1;
+  text-align: center;
+  padding: 12rpx 0;
+  border-radius: 999rpx;
+  color: #62718f;
+  font-size: 22rpx;
+}
+
+.seg__item.active {
+  background: #1f2736;
+  color: #fff;
+}
+
+.kv {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  color: #33415d;
+}
+
+.buttons {
+  margin-top: 10rpx;
+  display: flex;
+  gap: 10rpx;
+}
+
+.btn {
+  flex: 1;
+  min-width: 180rpx;
+  border-radius: 10rpx;
+  background: #e8edf5;
+  color: #28344e;
+  font-size: 22rpx;
+}
+
+.btn::after { border: none; }
+.btn.primary { background: #1f2736; color: #fff; }

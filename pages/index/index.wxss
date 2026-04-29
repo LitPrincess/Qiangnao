@@ -129,3 +129,17 @@
   color: #8b97af;
   margin-right: 8rpx;
 }
+
+.ai-err {
+  margin-top: 12rpx;
+  color: #c23d3d;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+.ai-text {
+  margin-top: 12rpx;
+  color: #2d3a50;
+  font-size: 23rpx;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
